@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CarePulse — Maternal Health</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blush:     #f2a7b0;
+      --blush-lt:  #fce8eb;
+      --sand:      #e8b98a;
+      --sand-lt:   #fdf3e8;
+      --sage:      #a8c5a0;
+      --sage-lt:   #eaf3e8;
+      --white:     #ffffff;
+      --offwhite:  #fdf9f6;
+      --warm-gray: #f5f0ec;
+      --text:      #2c1f1f;
+      --mid:       #7a6060;
+      --light:     #b8a0a0;
+      --green:     #74b87a;
+      --orange:    #e8a060;
+      --red:       #d97070;
+      --nav-h:     64px;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--text);
+      font-family: 'Lato', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky; top:0; z-index:100;
+      background: var(--white);
+      border-bottom: 1px solid #f0e8e0;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      box-shadow: 0 2px 12px rgba(180,140,120,0.08);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-style: italic;
+      color: var(--text);
+      letter-spacing: 0.3px;
+    }
+
+    .nav-logo span { color: var(--blush); font-style: normal; }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--mid);
+      font-weight: 700;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--blush); }
+
+    @media (max-width: 500px) { .nav-links { display:none; } }
+
+    .api-chip {
+      display: flex; align-items: center; gap:7px;
+      padding: 6px 14px;
+      background: var(--blush-lt);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--mid);
+    }
+
+    .chip-dot {
+      width:7px; height:7px; border-radius:50%;
+      background: var(--blush);
+      animation: breathe 2s ease-in-out infinite;
+    }
+    .chip-dot.on { background: var(--green); }
+    @keyframes breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    /* ─── HERO SLIDER ─── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      height: clamp(280px, 55vw, 480px);
+      background: var(--warm-gray);
+    }
+
+    .slide {
+      position: absolute; inset:0;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .slide.active { opacity:1; }
+
+    .slide img {
+      width:100%; height:100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .slide-overlay {
+      position: absolute; inset:0;
+      background: linear-gradient(to right, rgba(44,31,31,0.45) 0%, transparent 60%);
+    }
+
+    .slide-text {
+      position: absolute;
+      bottom: 40px; left: 40px;
+      color: white;
+      max-width: 340px;
+    }
+
+    @media (max-width:480px) {
+      .slide-text { left:20px; bottom:24px; }
+    }
+
+    .slide-text h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(22px, 5vw, 38px);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .slide-text p {
+      font-size: 13px;
+      opacity: 0.88;
+      font-weight: 300;
+      letter-spacing: 0.3px;
+    }
+
+    .slider-btn {
+      position: absolute; top:50%; transform:translateY(-50%);
+      width:40px; height:40px;
+      background: rgba(255,255,255,0.85);
+      border:none; border-radius:50%;
+      font-size:18px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+      z-index:10;
+      color: var(--text);
+    }
+    .slider-btn:hover { background: white; }
+    .slider-btn.prev { left:16px; }
+    .slider-btn.next { right:16px; }
+
+    .slider-dots {
+      position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+      display:flex; gap:7px; z-index:10;
+    }
+    .dot {
+      width:7px; height:7px; border-radius:50%;
+      background: rgba(255,255,255,0.5);
+      cursor:pointer; transition:background 0.2s;
+    }
+    .dot.active { background:white; }
+
+    /* ─── WELCOME ─── */
+    .welcome {
+      text-align:center;
+      padding: 52px 24px 40px;
+      background: var(--white);
+      border-bottom: 1px solid #f0e8e0;
+    }
+
+    .tag-line {
+      font-size:11px; letter-spacing:3px; text-transform:uppercase;
+      color: var(--blush); font-weight:700; margin-bottom:14px;
+    }
+
+    .welcome h2 {
+      font-family:'Playfair Display', serif;
+      font-size: clamp(24px, 5vw, 38px);
+      font-weight:400;
+      color: var(--text);
+      margin-bottom:18px;
+      line-height:1.2;
+    }
+
+    .welcome p {
+      color:var(--mid); font-size:14px; font-weight:300;
+      max-width:560px; margin:0 auto;
+      line-height:1.8;
+    }
+
+    /* ─── FEATURE CARDS ─── */
+    .features {
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:0;
+      border-top: 1px solid #f0e8e0;
+      border-bottom: 1px solid #f0e8e0;
+    }
+
+    @media (max-width:600px) { .features { grid-template-columns:1fr; } }
+
+    .feat {
+      padding: 32px 24px;
+      text-align:center;
+      border-right: 1px solid #f0e8e0;
+      background: var(--white);
+    }
+    .feat:last-child { border-right:none; }
+
+    .feat-img {
+      width:100%; height:120px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-bottom:16px;
+    }
+
+    .feat-icon { font-size:28px; margin-bottom:12px; }
+
+    .feat h3 {
+      font-family:'Playfair Display', serif;
+      font-size:17px; font-weight:600;
+      color:var(--text); margin-bottom:8px;
+    }
+
+    .feat p { font-size:13px; color:var(--mid); font-weight:300; line-height:1.7; }
+
+    /* ─── MONITOR SECTION ─── */
+    .monitor-wrap {
+      background: var(--offwhite);
+      padding: 48px 24px;
+    }
+
+    .section-head {
+      text-align:center;
+      margin-bottom:32px;
+    }
+
+    .section-head .tag-line { margin-bottom:10px; }
+
+    .section-head h2 {
+      font-family:'Playfair Display', serif;
+      font-size: clamp(22px,4vw,32px);
+      font-weight:400;
+      color:var(--text);
+    }
+
+    .monitor-card {
+      background: var(--white);
+      border-radius:20px;
+      padding: 32px;
+      max-width:680px;
+      margin:0 auto;
+      box-shadow: 0 4px 32px rgba(180,140,120,0.10);
+      border: 1px solid #f0e8e0;
+    }
+
+    /* ─── ALERT BANNER ─── */
+    #alert-banner {
+      display:none;
+      padding:18px 22px;
+      border-radius:14px;
+      margin-bottom:24px;
+      border-left:4px solid;
+      animation: popIn 0.4s ease;
+    }
+
+    @keyframes popIn {
+      from { opacity:0; transform:translateY(-6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    #alert-banner.NORMAL   { background:#eef8f1; border-color:var(--green); }
+    #alert-banner.WARNING  { background:#fef6ec; border-color:var(--orange); }
+    #alert-banner.CRITICAL {
+      background:#fdeaea; border-color:var(--red);
+      animation: popIn 0.4s ease, redPulse 1.5s ease infinite;
+    }
+    @keyframes redPulse {
+      0%,100%{ box-shadow:0 0 0 0 rgba(217,112,112,0); }
+      50%    { box-shadow:0 0 0 8px rgba(217,112,112,0.12); }
+    }
+
+    .b-row { display:flex; align-items:center; gap:14px; }
+    .b-emoji { font-size:28px; }
+    .b-title {
+      font-family:'Playfair Display', serif;
+      font-size:20px; font-weight:600;
+    }
+    .b-action { font-size:13px; color:var(--mid); margin-top:3px; }
+    .b-conf   { font-size:12px; color:var(--light); margin-top:2px; }
+
+    .NORMAL   .b-title { color:#3a8a55; }
+    .WARNING  .b-title { color:#c07828; }
+    .CRITICAL .b-title { color:var(--red); }
+
+    /* ─── INPUT GRID ─── */
+    .inp-label {
+      font-size:11px; letter-spacing:2px; text-transform:uppercase;
+      color:var(--light); font-weight:700; margin-bottom:14px;
+    }
+
+    .inp-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    @media (max-width:500px) { .inp-grid { grid-template-columns:1fr 1fr; } }
+
+    .inp-box {
+      background:var(--warm-gray);
+      border:1.5px solid #ecddd5;
+      border-radius:14px;
+      padding:14px 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .inp-box:focus-within {
+      border-color: var(--blush);
+      box-shadow: 0 0 0 3px rgba(242,167,176,0.15);
+      background: white;
+    }
+
+    .inp-box.spo2 {
+      background:#f0f5ff;
+      border-color:#c8d8f8;
+    }
+    .inp-box.spo2:focus-within {
+      border-color:#7aaaff;
+      box-shadow:0 0 0 3px rgba(122,170,255,0.15);
+    }
+
+    .inp-box label {
+      display:block;
+      font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+      color:var(--light); font-weight:700; margin-bottom:5px;
+    }
+    .inp-box.spo2 label { color:#8aaaee; }
+
+    .inp-row { display:flex; align-items:baseline; gap:5px; }
+
+    .inp-box input {
+      background:transparent; border:none; outline:none;
+      font-family:'Playfair Display', serif;
+      font-size:26px; font-weight:400;
+      color:var(--text); width:100%; min-width:0;
+    }
+    .inp-box input::placeholder { color:#d8c0c0; font-size:22px; }
+    .inp-box.spo2 input { color:#6a9aee; }
+    .inp-box.spo2 input::placeholder { color:#aac0f0; }
+
+    .unit { font-size:11px; color:var(--light); white-space:nowrap; font-weight:700; }
+    .inp-box.spo2 .unit { color:#8aaaee; }
+
+    /* ─── BUTTONS ─── */
+    .btn-row { display:flex; gap:10px; }
+
+    #predict-btn {
+      flex:1;
+      background: linear-gradient(135deg, var(--blush) 0%, var(--sand) 100%);
+      color:white; border:none; border-radius:14px;
+      padding:16px 24px;
+      font-family:'Lato', sans-serif;
+      font-size:14px; font-weight:700;
+      letter-spacing:0.5px; cursor:pointer;
+      box-shadow: 0 4px 18px rgba(242,167,176,0.35);
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    #predict-btn:hover  { opacity:0.88; transform:translateY(-1px); }
+    #predict-btn:active { transform:scale(0.98); }
+    #predict-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+
+    #clear-btn {
+      background:transparent; color:var(--light);
+      border:1.5px solid #ecddd5; border-radius:14px;
+      padding:16px 20px;
+      font-family:'Lato', sans-serif; font-size:13px;
+      cursor:pointer; transition:color 0.2s, border-color 0.2s;
+    }
+    #clear-btn:hover { color:var(--blush); border-color:var(--blush); }
+
+    /* ─── RESULTS ─── */
+    .res-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      margin:24px 0 0;
+    }
+    @media (max-width:480px) { .res-grid { grid-template-columns:1fr 1fr; } }
+
+    .res-card {
+      background:var(--warm-gray);
+      border:1.5px solid #ecddd5;
+      border-radius:14px;
+      padding:16px 14px;
+      text-align:center;
+      transition:border-color 0.4s, box-shadow 0.4s;
+    }
+
+    .res-icon { font-size:20px; margin-bottom:6px; }
+    .res-lbl  { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--light); font-weight:700; margin-bottom:5px; }
+    .res-val  {
+      font-family:'Playfair Display', serif;
+      font-size:18px; font-weight:600; color:var(--light);
+      transition:color 0.4s; line-height:1.1;
+    }
+    .res-sub  { font-size:10px; color:var(--light); margin-top:3px; }
+
+    .res-card.g { border-color:#a8d8b0; box-shadow:0 4px 16px rgba(116,184,122,0.15); }
+    .res-card.o { border-color:#f0c890; box-shadow:0 4px 16px rgba(232,160,96,0.15); }
+    .res-card.r { border-color:#f0a8a8; box-shadow:0 4px 16px rgba(217,112,112,0.15); }
+    .res-card.b { border-color:#a8c8ff; box-shadow:0 4px 16px rgba(122,170,255,0.15); }
+
+    .cg { color:var(--green) !important; }
+    .co { color:var(--orange) !important; }
+    .cr { color:var(--red) !important; }
+    .cb { color:#6a9aee !important; }
+
+    /* ─── PROB BARS ─── */
+    .prob-wrap { margin-top:20px; display:none; }
+
+    .prob-row {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:10px;
+    }
+
+    .p-dot  { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .p-name { font-size:12px; color:var(--mid); width:68px; font-weight:700; }
+    .p-track {
+      flex:1; height:7px; background:#ecddd5;
+      border-radius:4px; overflow:hidden;
+    }
+    .p-fill { height:100%; border-radius:4px; width:0%; transition:width 1s cubic-bezier(.4,0,.2,1); }
+    .p-pct  { font-size:12px; color:var(--light); width:36px; text-align:right; }
+
+    /* ─── HISTORY ─── */
+    .history-wrap {
+      background: var(--white);
+      padding: 48px 24px;
+      border-top: 1px solid #f0e8e0;
+    }
+
+    #hist-list { max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:10px; }
+
+    .hist-row {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 18px;
+      background:var(--warm-gray);
+      border-radius:14px;
+      border:1px solid #ecddd5;
+      animation:popIn 0.3s ease;
+      flex-wrap:wrap;
+    }
+
+    .h-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .h-time { font-size:11px; color:var(--light); width:44px; font-weight:700; }
+    .h-alert{ font-size:12px; font-weight:700; width:72px; }
+    .h-info { font-size:11px; color:var(--mid); flex:1; min-width:0; line-height:1.6; }
+    .h-conf { font-size:11px; color:var(--light); }
+
+    .empty-note {
+      text-align:center; color:var(--light);
+      font-family:'Playfair Display', serif;
+      font-size:15px; font-style:italic;
+      padding:24px 0;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background:var(--text);
+      color:rgba(255,255,255,0.5);
+      text-align:center;
+      padding:28px 24px;
+      font-size:12px;
+      letter-spacing:0.5px;
+    }
+
+    footer strong { color:var(--blush); font-style:italic; font-family:'Playfair Display',serif; font-size:14px; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo"><em>Care</em><span>Pulse</span></div>
+    <ul class="nav-links">
+      <li><a href="#monitor">Monitor</a></li>
+      <li><a href="#history">History</a></li>
+    </ul>
+    <div class="api-chip">
+      <div class="chip-dot" id="api-dot"></div>
+      <span id="api-txt">Connecting</span>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="slide active">
+      <img src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1200&q=85&fit=crop&crop=top" alt="Mother and baby"/>
+      <div class="slide-overlay"></div>
+      <div class="slide-text">
+        <h2>Health &amp; Safety for Every Mother</h2>
+        <p>Real-time monitoring, powered by care</p>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=1200&q=85&fit=crop&crop=top" alt="Newborn baby"/>
+      <div class="slide-overlay"></div>
+      <div class="slide-text">
+        <h2>Every Little Heartbeat Matters</h2>
+        <p>Smart alerts for the earliest warning signs</p>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=1200&q=85&fit=crop&crop=center" alt="Newborn feet"/>
+      <div class="slide-overlay"></div>
+      <div class="slide-text">
+        <h2>Built for Rural &amp; Low-Resource Settings</h2>
+        <p>Works online and offline for ASHA workers</p>
+      </div>
+    </div>
+    <button class="slider-btn prev" onclick="slide(-1)">‹</button>
+    <button class="slider-btn next" onclick="slide(1)">›</button>
+    <div class="slider-dots" id="dots"></div>
+  </div>
+
+  <div class="welcome">
+    <div class="tag-line">Welcome to CarePulse</div>
+    <h2>Smart Maternal Health Monitoring</h2>
+    <p>CarePulse combines IoT sensors with machine learning to continuously monitor maternal vital signs, detect early risk, and deliver timely alerts — helping every mother receive the care she deserves.</p>
+  </div>
+
+  <div class="features">
+    <div class="feat">
+      <img class="feat-img" src="https://images.unsplash.com/photo-1491013516836-7db643ee125a?w=500&q=80&fit=crop&crop=faces" alt="Pregnancy monitoring"/>
+      <h3>Real-time Vitals</h3>
+      <p>BP, heart rate, SpO₂, and temperature — tracked continuously and instantly analysed.</p>
+    </div>
+    <div class="feat">
+      <img class="feat-img" src="https://images.unsplash.com/photo-1559000357-f6b52ddfbe37?w=500&q=80&fit=crop" alt="Baby care"/>
+      <h3>Smart Risk Detection</h3>
+      <p>Machine learning trained on real patient data flags risks before they become emergencies.</p>
+    </div>
+    <div class="feat">
+      <img class="feat-img" src="https://images.unsplash.com/photo-1544126592-807ade215a0b?w=500&q=80&fit=crop" alt="Rural health"/>
+      <h3>Offline Ready</h3>
+      <p>Designed for clinics and ASHA workers with or without internet connectivity.</p>
+    </div>
+  </div>
+
+  <div class="monitor-wrap" id="monitor">
+    <div class="section-head">
+      <div class="tag-line">Patient Assessment</div>
+      <h2>Enter Vitals to Analyse Risk</h2>
+    </div>
+
+    <div class="monitor-card">
+
+      <div id="alert-banner">
+        <div class="b-row">
+          <div class="b-emoji" id="b-emoji">🌸</div>
+          <div>
+            <div class="b-title" id="b-title">—</div>
+            <div class="b-action" id="b-action">—</div>
+            <div class="b-conf" id="b-conf"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inp-label">Patient Vitals</div>
+      <div class="inp-grid">
+        <div class="inp-box">
+          <label>Age</label>
+          <div class="inp-row">
+            <input type="number" id="Age" placeholder="25" min="10" max="70"/>
+            <span class="unit">yrs</span>
+          </div>
+        </div>
+        <div class="inp-box">
+          <label>Systolic BP</label>
+          <div class="inp-row">
+            <input type="number" id="SystolicBP" placeholder="120" min="70" max="200"/>
+            <span class="unit">mmHg</span>
+          </div>
+        </div>
+        <div class="inp-box">
+          <label>Diastolic BP</label>
+          <div class="inp-row">
+            <input type="number" id="DiastolicBP" placeholder="80" min="40" max="130"/>
+            <span class="unit">mmHg</span>
+          </div>
+        </div>
+        
+        <div class="inp-box">
+          <label>Heart Rate</label>
+          <div class="inp-row">
+            <input type="number" id="HeartRate" placeholder="80" min="40" max="160" readonly style="opacity: 0.85;"/>
+            <span class="unit">bpm</span>
+          </div>
+        </div>
+        <div class="inp-box">
+          <label>Body Temp</label>
+          <div class="inp-row">
+            <input type="number" id="BodyTemp" placeholder="36.6" step="0.1" min="35" max="42" readonly style="opacity: 0.85;"/>
+            <span class="unit">°C</span>
+          </div>
+        </div>
+        <div class="inp-box spo2">
+          <label>SpO₂</label>
+          <div class="inp-row">
+            <input type="number" id="SpO2" placeholder="97" step="0.1" min="80" max="100" readonly style="opacity: 0.85;"/>
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="predict-btn" onclick="predict()">♥ &nbsp;Analyse Vitals</button>
+        <button id="clear-btn" onclick="clearAll()">Clear</button>
+      </div>
+
+      <div class="res-grid">
+        <div class="res-card" id="rc-ml">
+          <div class="res-icon">🤖</div>
+          <div class="res-lbl">ML Risk</div>
+          <div class="res-val" id="rv-ml">—</div>
+          <div class="res-sub" id="rs-ml">awaiting input</div>
+        </div>
+        <div class="res-card" id="rc-spo2">
+          <div class="res-icon">💧</div>
+          <div class="res-lbl">SpO₂ Check</div>
+          <div class="res-val" id="rv-spo2">—</div>
+          <div class="res-sub" id="rs-spo2">from sensor</div>
+        </div>
+        <div class="res-card" id="rc-final">
+          <div class="res-icon">🏥</div>
+          <div class="res-lbl">Final Alert</div>
+          <div class="res-val" id="rv-final">—</div>
+          <div class="res-sub">combined result</div>
+        </div>
+      </div>
+
+      <div class="prob-wrap" id="prob-wrap">
+        <div class="inp-label" style="margin-top:4px">Risk Probability</div>
+        <div class="prob-row">
+          <div class="p-dot" style="background:var(--green)"></div>
+          <div class="p-name">Low Risk</div>
+          <div class="p-track"><div class="p-fill" id="pf-low" style="background:var(--green)"></div></div>
+          <div class="p-pct" id="pp-low">0%</div>
+        </div>
+        <div class="prob-row">
+          <div class="p-dot" style="background:var(--orange)"></div>
+          <div class="p-name">Mid Risk</div>
+          <div class="p-track"><div class="p-fill" id="pf-mid" style="background:var(--orange)"></div></div>
+          <div class="p-pct" id="pp-mid">0%</div>
+        </div>
+        <div class="prob-row">
+          <div class="p-dot" style="background:var(--red)"></div>
+          <div class="p-name">High Risk</div>
+          <div class="p-track"><div class="p-fill" id="pf-high" style="background:var(--red)"></div></div>
+          <div class="p-pct" id="pp-high">0%</div>
+        </div>
+      </div>
+
+    </div></div><div class="history-wrap" id="history">
+    <div class="section-head">
+      <div class="tag-line">Session Log</div>
+      <h2>Reading History</h2>
+    </div>
+    <div id="hist-list">
+      <div class="empty-note">No readings yet — enter vitals above to begin</div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>CarePulse</strong><br/>
+    <span style="margin-top:6px;display:block">Maternal Health Monitoring System &nbsp;·&nbsp; Made with ♥ for every mother</span>
+  </footer>
+
+<script>
+  const API = "http://127.0.0.1:5000";
+
+  // ─── Slider ───
+  const slides = document.querySelectorAll(".slide");
+  const dotsEl = document.getElementById("dots");
+  let cur = 0, timer;
+
+  slides.forEach((_,i) => {
+    const d = document.createElement("div");
+    d.className = "dot" + (i===0?" active":"");
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    slides[cur].classList.remove("active");
+    dotsEl.children[cur].classList.remove("active");
+    cur = (n + slides.length) % slides.length;
+    slides[cur].classList.add("active");
+    dotsEl.children[cur].classList.add("active");
+    resetTimer();
+  }
+
+  function slide(dir) { goTo(cur + dir); }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => goTo(cur + 1), 5000);
+  }
+
+  resetTimer();
+
+  // ─── API status ───
+  async function checkAPI() {
+    const dot = document.getElementById("api-dot");
+    const txt = document.getElementById("api-txt");
+    try {
+      const r = await fetch(API+"/", { signal: AbortSignal.timeout(3000) });
+      if (r.ok) { dot.classList.add("on"); txt.textContent="API Online"; return; }
+    } catch {}
+    dot.classList.remove("on");
+    txt.textContent = "API Offline";
+  }
+  checkAPI();
+  setInterval(checkAPI, 10000);
+
+  // ─── Auto-Fetch Sensor Streaming Route ───
+  async function fetchSensorData() {
+    try {
+      const response = await fetch(API + "/sensor_data");
+      if (!response.ok) throw new Error("Connection interface dropped");
+
+      const data = await response.json();
+
+      // Automate streaming sensor inputs securely
+      if (data.HeartRate) document.getElementById("HeartRate").value = data.HeartRate;
+      if (data.BodyTemp)  document.getElementById("BodyTemp").value  = data.BodyTemp;
+      
+      if (data.SpO2) {
+        document.getElementById("SpO2").value = data.SpO2;
+
+        // Dynamic inline SpO2 preview card setup
+        const spo2Card = document.getElementById("rc-spo2");
+        const spo2Val  = document.getElementById("rv-spo2");
+        const subText  = document.getElementById("rs-spo2");
+        
+        let colorClass = "g";
+        let textClass  = "cg";
+        let statusText = "NORMAL";
+
+        if (data.SpO2 < 90) {
+          colorClass = "r";
+          textClass  = "cr";
+          statusText = "CRITICAL";
+        } else if (data.SpO2 < 95) {
+          colorClass = "o";
+          textClass  = "co";
+          statusText = "WARNING";
+        }
+
+        spo2Card.className  = `res-card ${colorClass}`;
+        spo2Val.className   = `res-val ${textClass}`;
+        spo2Val.textContent = statusText;
+        subText.textContent = `SpO₂: ${data.SpO2}%`;
+      }
+    } catch (err) {
+      console.warn("Polling sensor data stream backend...", err.message);
+    }
+  }
+
+  // Check hardware stream updates every 2 seconds
+  setInterval(fetchSensorData, 2000);
+  fetchSensorData();
+
+  // ─── Predict ───
+  async function predict() {
+    const ageVal  = document.getElementById("Age").value;
+    const sysVal  = document.getElementById("SystolicBP").value;
+    const diaVal  = document.getElementById("DiastolicBP").value;
+    const hrVal   = document.getElementById("HeartRate").value;
+    const tempVal = document.getElementById("BodyTemp").value;
+    const spo2Val = document.getElementById("SpO2").value;
+
+    // Strict Validation Checks split by structural type
+    if (!ageVal) { alert("Please manually enter the patient's Age."); return; }
+    if (!sysVal || !diaVal) { alert("Please manually enter the Blood Pressure (Systolic & Diastolic)."); return; }
+    if (!hrVal || !tempVal) { 
+      alert("Error: Dashboard hasn't received data from your sensors yet. Verify your hardware backend is connected and transmitting."); 
+      return; 
+    }
+
+    const payload = {
+      Age: parseFloat(ageVal),
+      SystolicBP: parseFloat(sysVal),
+      DiastolicBP: parseFloat(diaVal),
+      HeartRate: parseFloat(hrVal),
+      BodyTemp: parseFloat(tempVal)
+    };
+
+    if (spo2Val) payload.SpO2 = parseFloat(spo2Val);
+
+    const btn = document.getElementById("predict-btn");
+    btn.disabled = true;
+    btn.textContent = "Analysing…";
+
+    try {
+      const res = await fetch(API+"/predict", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) { alert("Error: "+data.error); return; }
+      renderResults(data, payload);
+      addHistory(data, payload);
+      document.getElementById("monitor").scrollIntoView({ behavior:"smooth" });
+    } catch {
+      alert("Cannot reach API.\nRun in terminal:\n\npy -3.10 predict_api.py");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "♥  Analyse Vitals";
+    }
+  }
+
+  // ─── Render ───
+  const CC = { NORMAL:"g", WARNING:"o", CRITICAL:"r" };
+  const TC = { NORMAL:"cg", WARNING:"co", CRITICAL:"cr" };
+  const EM = { NORMAL:"✅", WARNING:"⚠️", CRITICAL:"🚨" };
+
+  function renderResults(d, p) {
+    const al = d.final_alert;
+    const c  = CC[al]||"g";
+
+    setCard("rc-ml","rv-ml","rs-ml", d.risk_level.toUpperCase(), `confidence ${d.confidence}%`, c, TC[al]);
+
+    const sa = d.spo2_alert;
+    const sc = sa==="not provided"?"b": CC[sa]||"b";
+    const st = sa==="not provided"?"cb": TC[sa]||"cb";
+    setCard("rc-spo2","rv-spo2","rs-spo2",
+      sa==="not provided"?"—":sa,
+      d.spo2_value ? `SpO₂: ${d.spo2_value}%` : "not provided", sc, st);
+
+    setCard("rc-final","rv-final",null, al, null, c, TC[al]);
+
+    const banner = document.getElementById("alert-banner");
+    banner.style.display = "block";
+    banner.className = al;
+    document.getElementById("b-emoji").textContent  = EM[al];
+    document.getElementById("b-title").textContent  = al+" — "+d.risk_level.toUpperCase();
+    document.getElementById("b-action").textContent = d.action;
+    document.getElementById("b-conf").textContent   = `Model confidence: ${d.confidence}%`;
+
+    const pr = d.probabilities||{};
+    document.getElementById("prob-wrap").style.display="block";
+    setProb("low",  pr["low risk"]||0);
+    setProb("mid",  pr["mid risk"]||0);
+    setProb("high", pr["high risk"]||0);
+  }
+
+  function setCard(cardId, valId, subId, val, sub, cardCls, txtCls) {
+    document.getElementById(cardId).className = "res-card "+cardCls;
+    const v = document.getElementById(valId);
+    v.className = "res-val "+txtCls;
+    v.textContent = val;
+    if (subId && sub) document.getElementById(subId).textContent = sub;
+  }
+
+  function setProb(id, pct) {
+    document.getElementById("pf-"+id).style.width = pct+"%";
+    document.getElementById("pp-"+id).textContent  = pct+"%";
+  }
+
+  // ─── History ───
+  function addHistory(d, p) {
+    const list = document.getElementById("hist-list");
+    if (list.querySelector(".empty-note")) list.innerHTML = "";
+
+    const t = new Date();
+    const time = t.getHours().toString().padStart(2,"0")+":"+t.getMinutes().toString().padStart(2,"0");
+    const al = d.final_alert;
+    const dotC = { NORMAL:"var(--green)", WARNING:"var(--orange)", CRITICAL:"var(--red)" }[al];
+    const txtC = { NORMAL:"cg", WARNING:"co", CRITICAL:"cr" }[al];
+
+    const row = document.createElement("div");
+    row.className = "hist-row";
+    row.innerHTML = `
+      <div class="h-dot" style="background:${dotC}"></div>
+      <div class="h-time">${time}</div>
+      <div class="h-alert ${txtC}">${al}</div>
+      <div class="h-info">
+        Age ${p.Age} · BP ${p.SystolicBP}/${p.DiastolicBP} · HR ${p.HeartRate}bpm · ${p.BodyTemp}°C
+        ${p.SpO2 ? '· SpO₂ '+p.SpO2+'%' : ''}
+      </div>
+      <div class="h-conf">${d.confidence}%</div>
+    `;
+    list.insertBefore(row, list.firstChild);
+  }
+
+  // ─── Clear ───
+  function clearAll() {
+    ["Age","SystolicBP","DiastolicBP","HeartRate","BodyTemp","SpO2"]
+      .forEach(id => document.getElementById(id).value = "");
+    document.getElementById("alert-banner").style.display = "none";
+    document.getElementById("prob-wrap").style.display = "none";
+    ["rc-ml","rc-spo2","rc-final"].forEach(id => document.getElementById(id).className="res-card");
+    ["rv-ml","rv-spo2","rv-final"].forEach(id => {
+      document.getElementById(id).className="res-val";
+      document.getElementById(id).textContent="—";
+    });
+    document.getElementById("rs-ml").textContent = "awaiting input";
+  }
+
+  document.addEventListener("keydown", e => { if(e.key==="Enter") predict(); });
+</script>
+</body>
+</html>
